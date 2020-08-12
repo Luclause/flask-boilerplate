@@ -19,3 +19,7 @@ class Config(object):
     MAIL_USERNAME = os.environ.get('MAIL_USERNAME')
     MAIL_PASSWORD = os.environ.get('MAIL_PASSWORD')
     ADMIN = ['somesnorkshit@gmail.com']
+
+    # APP Settings
+    POSTS_PER_PAGE = 3
+    
