@@ -3,6 +3,7 @@ from config import Config
 from flask_sqlalchemy import SQLAlchemy
 from flask_migrate import Migrate
 from flask_login import LoginManager
+from flask_mail import Mail
 import logging
 from logging.handlers import SMTPHandler, RotatingFileHandler
 import os
@@ -20,6 +21,9 @@ migrate = Migrate(app, db)
 # Initialize Login Manager
 login = LoginManager(app)
 login.login_view = 'login'
+
+# Initialize Mail server
+mail = Mail(app)
 
 # Logging errors to Admins through SMTP
 if not app.debug:
