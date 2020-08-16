@@ -5,6 +5,7 @@ from flask_migrate import Migrate
 from flask_login import LoginManager
 from flask_mail import Mail
 from flask_bootstrap import Bootstrap
+from flask_moment import Moment
 import logging
 from logging.handlers import SMTPHandler, RotatingFileHandler
 import os
@@ -28,6 +29,9 @@ mail = Mail(app)
 
 # Initialise Bootstrap
 bootstrap = Bootstrap(app)
+
+# Intialise Moment.js
+moment = Moment(app)
 
 # Logging errors to Admins through SMTP
 if not app.debug:
