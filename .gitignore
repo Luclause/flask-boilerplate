@@ -6,6 +6,7 @@
 # Custom ignores
 .vscode/*
 venv/*
+messages.pot
 
 # User-specific files
 *.rsuser
