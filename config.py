@@ -22,4 +22,7 @@ class Config(object):
 
     # APP Settings
     POSTS_PER_PAGE = 3
+
+    # Languages
+    LANGUAGES = ['en', 'es']
     
