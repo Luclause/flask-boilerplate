@@ -7,7 +7,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: PROJECT VERSION\n"
 "Report-Msgid-Bugs-To: EMAIL@ADDRESS\n"
-"POT-Creation-Date: 2020-08-24 19:33+1000\n"
+"POT-Creation-Date: 2020-09-06 14:02+1000\n"
 "PO-Revision-Date: 2020-08-24 19:33+1000\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language: es\n"
@@ -18,7 +18,19 @@ msgstr ""
 "Content-Transfer-Encoding: 8bit\n"
 "Generated-By: Babel 2.8.0\n"
 
-#: app/templates/_post.html:16
+#: app/translate.py:9
+msgid "Error: the translation service is not configured."
+msgstr ""
+
+#: app/translate.py:34
+msgid "Error: the translation service failed."
+msgstr ""
+
+#: app/templates/_post.html:22
 msgid "Translate"
+msgstr ""
+
+#: app/templates/base.html:18
+msgid "Error: Could not contact server."
 msgstr ""
 
