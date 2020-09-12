@@ -11,76 +11,82 @@ import logging
 from logging.handlers import SMTPHandler, RotatingFileHandler
 import os
 
-# Initialize Flask app
-app = Flask(__name__)
-app.config.from_object(Config)
+db = SQLAlchemy()
+migrate = Migrate()
+login = LoginManager()
+login.login_view = 'auth.login'
+login.login_message = _l('Please log in to access this page.')
+mail = Mail()
+bootstrap = Bootstrap()
+moment = Moment()
+babel = Babel()
 
-# Initialize SQLite DB
-db = SQLAlchemy(app)
+def create_app(config_class=Config):
 
-# Initialize Migration engine
-migrate = Migrate(app, db)
+    # Initialize Flask app
+    app = Flask(__name__)
+    app.config.from_object(Config)
 
-# Initialize Login Manager
-login = LoginManager(app)
-login.login_view = 'login'
+    db.init_app(app)
+    migrate.init_app(app, db)
+    login.init_app(app)
+    mail.init_app(app)
+    bootstrap.init_app(app)
+    moment.init_app(app)
+    babel.init_app(app)
 
-# Initialize Mail server
-mail = Mail(app)
+    # Register the error handling blueprint
+    from app.errors import bp as errors_bp
+    app.register_blueprint(errors_bp)
 
-# Initialise Bootstrap
-bootstrap = Bootstrap(app)
+    # Register the authentication blueprint
+    from app.auth import bp as auth_bp
+    app.register_blueprint(auth_bp, url_prefix='/auth')
 
-# Intialise Moment.js
-moment = Moment(app)
+    # Logging errors to Admins through SMTP
+    if not app.debug and not app.testing:
+        if app.config['MAIL_SERVER']:
+            # Set authentication
+            auth = None
+            if app.config['MAIL_USERNAME'] or app.config['MAIL_PASSWORD']:
+                auth = (app.config['MAIL_USERNAME'], app.config['MAIL_PASSWORD'])
 
-# Initialise Babel
-babel = Babel(app)
+            # Set secure
+            secure = None
+            if app.config['MAIL_USE_TLS']:
+                secure = ()
 
-# Logging errors to Admins through SMTP
-if not app.debug:
-    if app.config['MAIL_SERVER']:
-        # Set authentication
-        auth = None
-        if app.config['MAIL_USERNAME'] or app.config['MAIL_PASSWORD']:
-            auth = (app.config['MAIL_USERNAME'], app.config['MAIL_PASSWORD'])
+            # Build mailing arguments
+            mail_handler = SMTPHandler(
+                mailhost=(app.config['MAIL_SERVER'], app.config['MAIL_PORT']),
+                fromaddr='noreply@' + app.config['MAIL_SERVER'],
+                toaddrs=app.config['ADMIN'],
+                subject='Microblog Failure',
+                credentials=auth,
+                secure=secure
+            )
 
-        # Set secure
-        secure = None
-        if app.config['MAIL_USE_TLS']:
-            secure = ()
+            # Log on Error and mail Admins
+            mail_handler.setLevel(logging.ERROR)
+            app.logger.addHandler(mail_handler)
 
-        # Build mailing arguments
-        mail_handler = SMTPHandler(
-            mailhost=(app.config['MAIL_SERVER'], app.config['MAIL_PORT']),
-            fromaddr='noreply@' + app.config['MAIL_SERVER'],
-            toaddrs=app.config['ADMIN'],
-            subject='Microblog Failure',
-            credentials=auth,
-            secure=secure
-        )
+        # Log errors to a file
+        if not os.path.exists('logs'):
+            os.mkdir('logs')
 
-        # Log on Error and mail Admins
-        mail_handler.setLevel(logging.ERROR)
-        app.logger.addHandler(mail_handler)
+        file_handler = RotatingFileHandler('logs/microblog.log', maxBytes=10240,
+                                        backupCount=10)
+        file_handler.setFormatter(logging.Formatter(
+            '%(asctime)s %(levelname)s: %(message)s [in %(pathname)s:%(lineno)d]'))
+        file_handler.setLevel(logging.INFO)
+        app.logger.addHandler(file_handler)
 
-    # Log errors to a file
-    if not os.path.exists('logs'):
-        os.mkdir('logs')
+        app.logger.setLevel(logging.INFO)
+        app.logger.info('Microblog startup')
 
-    file_handler = RotatingFileHandler('logs/microblog.log', maxBytes=10240,
-                                       backupCount=10)
-    file_handler.setFormatter(logging.Formatter(
-        '%(asctime)s %(levelname)s: %(message)s [in %(pathname)s:%(lineno)d]'))
-    file_handler.setLevel(logging.INFO)
-    app.logger.addHandler(file_handler)
+    @babel.localeselector
+    def get_locale():
+        return request.accept_languages.best_match(app.config['LANGUAGES'])
+        # return 'es'
 
-    app.logger.setLevel(logging.INFO)
-    app.logger.info('Microblog startup')
-
-@babel.localeselector
-def get_locale():
-    return request.accept_languages.best_match(app.config['LANGUAGES'])
-    # return 'es'
-
-from app import routes, models, errors
+    return app
